@@ -1,0 +1,421 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour {
+
+    public static GameManager instance ;
+
+    [SerializeField]
+    private GameObject panel;
+
+    [SerializeField]
+    private GameObject player;
+
+    [SerializeField]
+    private GameObject[] spawnPoints;
+
+    [SerializeField]
+    private GameObject[] powerUpSpawnPoints;
+
+    [SerializeField]
+    private GameObject tanker;
+
+    [SerializeField]
+    private GameObject soldier;
+
+    [SerializeField]
+    private GameObject ranger;
+
+    [SerializeField]
+    private GameObject arrow;
+
+    [SerializeField]
+    private GameObject healthPowerUp;
+
+    [SerializeField]
+    private GameObject speedPowerUp;
+
+    [SerializeField]
+    private GameObject damageUpPower;
+
+    [SerializeField]
+    private GameObject bombPowerUp;
+
+    [SerializeField]
+    private int maxPowerUps=100;
+
+    [SerializeField]
+    private Text levelText;
+
+    [SerializeField]
+    private Text endGameText;
+
+    [SerializeField]
+    private int finalLevel=20;
+
+    private bool gameOver = false;
+    private int currentLevel;
+    private int countPowerUps=2;
+    private float generatedSpawnTime = 1f;
+    private float currentSpawnTime = 0;
+    private float powerUpSpawnTime = 30f;
+    private float CurrentPowerUpSpawnTime = 0f;
+    private GameObject newEnemy;
+    private GameObject newPowerUp;
+    private GameObject[] generateEnemies;
+    private int powerUps = 0;
+
+    private List<EnemyHealth> enemies = new List<EnemyHealth>();
+    private List<EnemyHealth> killedEnemies = new List<EnemyHealth>();
+    private List<BombScript> bombedEnemies = new List<BombScript>();
+
+    public List<EnemyHealth> Enemies {
+
+        get {
+
+            return enemies;
+
+        }
+
+    }
+
+    public List<EnemyHealth> KilledEnemies
+    {
+
+        get
+        {
+
+            return killedEnemies; ;
+
+        }
+
+        set {
+
+            killedEnemies = value;
+
+        }
+
+    }
+
+    public void RegisterEnemy(EnemyHealth enemy) {
+
+        enemies.Add(enemy);
+
+    }
+
+    public void KilledEnemy(EnemyHealth enemy) {
+
+        killedEnemies.Add(enemy);
+
+    }
+
+    public void BombedEnemy(BombScript enemy) {
+
+        bombedEnemies.Add(enemy);
+
+    }
+
+    public void RegisterPowerUp() {
+
+        powerUps++;
+
+    }
+
+    public bool GameOver {
+
+        get {
+
+            return gameOver;
+
+        }
+
+    }
+
+    public GameObject Player {
+
+        get {
+
+            return player;
+
+        }
+
+    }
+
+    public GameObject Arrow
+    {
+
+        get
+        {
+
+            return arrow;
+
+        }
+
+    }
+
+    private void Awake() {
+
+        if (instance == null) {
+
+            instance = this;
+
+        }
+        else if (instance != this) {
+
+            Destroy(gameObject);
+
+        }
+    }
+
+    // Use this for initialization
+    void Start () {
+
+        currentLevel = 1;
+        StartCoroutine(Spawn());
+        StartCoroutine(PowerUpSpawn());
+        endGameText.enabled = false;
+
+    }
+	
+	// Update is called once per frame
+	void Update () {
+
+        currentSpawnTime += Time.deltaTime;
+        CurrentPowerUpSpawnTime += Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+
+            Time.timeScale = 0;
+
+            panel.SetActive(true);
+
+        }       
+
+    }
+
+    public void GoOn() {
+       
+        panel.SetActive(false);
+        Time.timeScale = 1;
+
+    }
+
+    public void MainMenu() {
+
+        SceneManager.LoadScene("Menu");
+        Time.timeScale = 1;
+
+    }
+
+    public void PlayerHit(int currentHP) {
+
+        if (currentHP > 0) {
+
+            gameOver = false;
+
+        } else {
+
+            gameOver = true;
+            StartCoroutine(EndGame("tekrar dene"));
+
+        }
+
+    }
+
+    IEnumerator Spawn() {
+
+        if (currentSpawnTime>generatedSpawnTime) {
+
+            currentSpawnTime = 0;
+
+            if (enemies.Count < currentLevel) {
+
+                int random = Random.Range(0,spawnPoints.Length-1);
+                GameObject spawnnLocation = spawnPoints[random];
+                int randomEnemy = Random.Range(0,3);
+
+                if (randomEnemy == 0)
+                {
+
+                    newEnemy = Instantiate(soldier) as GameObject;
+
+                }
+                else if (randomEnemy == 1)
+                {
+
+                    newEnemy = Instantiate(ranger) as GameObject;
+
+                }
+                else {
+
+                    newEnemy = Instantiate(tanker) as GameObject;
+
+                }
+
+                newEnemy.transform.position = spawnnLocation.transform.position;
+
+            }
+            //(killedEnemies.Count==currentLevel && currentLevel != finalLevel) || enemies.Count==0)
+            if ((KilledEnemies.Count >= currentLevel && currentLevel != finalLevel)) {
+
+                enemies.Clear();
+                killedEnemies.Clear();
+
+                yield return new WaitForSeconds(3f);
+                currentLevel++;
+                levelText.text = "Level "+currentLevel;
+
+            }
+
+            if (killedEnemies.Count == finalLevel) {
+
+                StartCoroutine(EndGame("Kazandin"));
+
+            }
+
+        }
+
+        yield return null;
+        StartCoroutine(Spawn());
+
+    }
+
+    IEnumerator PowerUpSpawn() {
+
+        if (CurrentPowerUpSpawnTime > powerUpSpawnTime) {
+
+            CurrentPowerUpSpawnTime = 0;
+
+            if (powerUps < maxPowerUps) {
+
+                int randomSpawnPoint = Random.Range(1, powerUpSpawnPoints.Length);
+                GameObject spawnLocation = powerUpSpawnPoints[randomSpawnPoint];
+                if (PlayerPrefs.GetInt("BombKey") == 1 && PlayerPrefs.GetInt("DamageKey") != 1)
+                {
+                    countPowerUps++;
+                    int randomPowerUp = Random.Range(0, countPowerUps);
+
+                    if (randomPowerUp == 0)
+                    {
+
+                        newPowerUp = Instantiate(healthPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 1)
+                    {
+
+                        newPowerUp = Instantiate(speedPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 2)
+                    {
+
+                        newPowerUp = Instantiate(bombPowerUp) as GameObject;
+
+                    }
+
+                }
+                else if (PlayerPrefs.GetInt("BombKey") != 1 && PlayerPrefs.GetInt("DamageKey") == 1)
+                {
+
+                    countPowerUps++;
+                    int randomPowerUp = Random.Range(0, countPowerUps);
+
+                    if (randomPowerUp == 0)
+                    {
+
+                        newPowerUp = Instantiate(healthPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 1)
+                    {
+
+                        newPowerUp = Instantiate(speedPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 2)
+                    {
+
+                        newPowerUp = Instantiate(damageUpPower) as GameObject;
+
+                    }
+
+                }
+                else if (PlayerPrefs.GetInt("BombKey") == 1 && PlayerPrefs.GetInt("DamageKey") == 1)
+                {
+
+                    countPowerUps++;
+                    int randomPowerUp = Random.Range(0, countPowerUps);
+
+                    if (randomPowerUp == 0)
+                    {
+
+                        newPowerUp = Instantiate(healthPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 1)
+                    {
+
+                        newPowerUp = Instantiate(speedPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 2)
+                    {
+
+                        newPowerUp = Instantiate(damageUpPower) as GameObject;
+
+                    }
+                    else
+                    {
+
+                        newPowerUp = Instantiate(bombPowerUp) as GameObject;
+
+                    }
+
+                }
+                else {
+
+                    countPowerUps=2;
+                    int randomPowerUp = Random.Range(0, countPowerUps);
+
+                    if (randomPowerUp == 0)
+                    {
+
+                        newPowerUp = Instantiate(healthPowerUp) as GameObject;
+
+                    }
+                    else if (randomPowerUp == 1)
+                    {
+
+                        newPowerUp = Instantiate(speedPowerUp) as GameObject;
+
+                    }
+
+                }
+                
+
+                newPowerUp.transform.position = spawnLocation.transform.position;
+                
+            }
+
+        }
+
+        yield return null;
+        StartCoroutine(PowerUpSpawn());
+
+    }
+
+    IEnumerator EndGame(string outCome) {
+
+        endGameText.text = outCome;
+        endGameText.enabled = true;
+        yield return new WaitForSeconds(3f);
+        SceneManager.LoadScene("Menu");
+
+    }
+
+}
