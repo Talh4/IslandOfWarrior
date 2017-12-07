@@ -1,0 +1,36 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class DamagePowerUpScript : MonoBehaviour {
+
+    private GameObject player;
+    private BarbarAttack barbarAttack;
+
+	// Use this for initialization
+	void Start () {
+
+        player = GameManager.instance.Player;
+        barbarAttack = player.GetComponent<BarbarAttack>();
+        GameManager.instance.RegisterPowerUp();
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+    void OnTriggerEnter(Collider other) {
+
+        if (other.gameObject == player)
+        {
+
+            barbarAttack.DamagePowerUp();
+            Destroy(gameObject);
+
+        }
+
+    }
+
+}
