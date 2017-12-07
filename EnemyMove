@@ -1,0 +1,48 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.Assertions;
+using UnityEngine.AI;
+using UnityEngine;
+
+public class EnemyMove : MonoBehaviour {
+
+    private Transform hero;
+
+    private NavMeshAgent nav;
+    private Animator anim;
+    private EnemyHealth enemyHealth;
+
+    // Use this for initialization
+    void Start () {
+
+        hero = GameManager.instance.Player.transform;
+        enemyHealth = GetComponent<EnemyHealth>();
+        anim = GetComponent<Animator>();
+        nav = GetComponent<NavMeshAgent>();
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+
+        if (!GameManager.instance.GameOver && enemyHealth.IsAlive)
+        {
+
+           nav.SetDestination(hero.position);
+
+        }
+        else if ((!GameManager.instance.GameOver || GameManager.instance.GameOver) && !enemyHealth.IsAlive)
+        {
+
+            nav.enabled = false;
+
+        }
+        else {
+
+            nav.enabled = false;
+            anim.Play("idle");
+
+        }      
+
+	}
+}
