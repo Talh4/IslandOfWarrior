@@ -1,0 +1,159 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.AI;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class EnemyHealth : MonoBehaviour {
+
+    public static EnemyHealth instance = null;
+
+    [SerializeField]
+    private int startingHealth = 20;
+
+    [SerializeField]
+    private float timeSinceLastHit = 0.7f;
+
+    [SerializeField]
+    private float dissapearSpeed = 2f;
+
+    private bool hit=false;
+
+    private AudioSource audioSource;
+    private float timer = 0f;
+    private Animator anim;
+    private NavMeshAgent nav;
+    private bool isAlive;
+    private Rigidbody rigidBody;
+    private CapsuleCollider capsuleCollider;
+    private bool dissapearEnemy = false;
+    private int currentHealth;
+    private ParticleSystem blood;
+
+    public bool GetHits {
+
+        get {
+
+            return hit;
+
+        }
+
+    }
+
+    public bool IsAlive {
+
+        get {
+
+            return isAlive;
+
+        }
+
+    }
+
+    // Use this for initialization
+    void Start () {
+
+        GameManager.instance.RegisterEnemy(this);
+
+        blood = GetComponentInChildren<ParticleSystem>();
+        rigidBody = GetComponent<Rigidbody>();
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        nav = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+        isAlive = true;
+        currentHealth = startingHealth;
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+
+        timer += Time.deltaTime;
+
+        if (dissapearEnemy) {
+
+            transform.Translate(-Vector3.up * dissapearSpeed * Time.deltaTime);
+            //Debug.Log("Yere çekiliyorum");
+
+        }
+
+	}
+
+    private void OnTriggerEnter(Collider other)
+    {
+
+        if (timer >= timeSinceLastHit && !GameManager.instance.GameOver) {
+
+            if (other.tag == "playerweapon" && currentHealth > 0)
+            {
+
+                hit = true;
+                Debug.Log(hit);
+                currentHealth -= BarbarAttack.instance.HeroDamage;
+
+                blood.Play();
+                TakeHit();
+                timer = 0f;
+                // Debug.Log(currentHealth);
+
+            }
+            else {
+
+                //hit = false;
+
+            }
+
+        }
+
+    }
+
+    public void Hits() {
+
+        hit=true;
+
+    }
+
+    void TakeHit() {
+
+        if (currentHealth <= 0)
+        {
+
+            audioSource.PlayOneShot(audioSource.clip);
+            isAlive = false;
+            KillEnemy();
+
+        }
+        else {
+    
+            audioSource.PlayOneShot(audioSource.clip);
+            anim.Play("hit");
+           // currentHealth -= 10;
+
+        }
+
+    }
+
+    void KillEnemy() {
+
+        GameManager.instance.KilledEnemy(this);
+
+        capsuleCollider.enabled = false;
+        nav.enabled = false;
+        anim.SetTrigger("enemydie");
+        rigidBody.isKinematic = true;
+        //Debug.Log("Ölüm animasyonu");
+        StartCoroutine(RemoveEnemy());
+
+    }
+
+    IEnumerator RemoveEnemy() {
+
+        yield return new WaitForSeconds(4f);
+        dissapearEnemy = true;
+        yield return new WaitForSeconds(2f);
+        gameObject.SetActive(false);
+
+    }
+
+}
