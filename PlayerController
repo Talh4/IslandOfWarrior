@@ -1,0 +1,174 @@
+using System.Collections;
+using UnityEngine;
+using UnityStandardAssets.CrossPlatformInput;
+//using UnityEditor.SceneManagement;
+
+public class PlayerController : MonoBehaviour {
+
+    [SerializeField]
+    private float moveSpeed=10f;
+
+    [SerializeField]
+    private LayerMask layerMask;
+
+    private CharacterController characterController;
+    private Vector3 currentLookTarget = Vector3.zero;
+    private Animator anim;
+    private BoxCollider[] swordColliders;
+    private GameObject fireTrail;
+    private ParticleSystem fireTrailParticles;
+
+    private void Awake()
+    {
+
+    }
+
+    // Use this for initialization
+    void Start () {
+
+        fireTrail = GameObject.FindWithTag("Fire") as GameObject;
+        fireTrail.SetActive(false);
+        swordColliders = GetComponentsInChildren<BoxCollider>();
+        anim = GetComponent<Animator>();
+        characterController=GetComponent<CharacterController>();
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+
+        if (!GameManager.instance.GameOver) {
+
+            //float hInput = CrossPlatformInputManager.GetAxis("Horizontal") * moveSpeed;
+            //float vInput = CrossPlatformInputManager.GetAxis("Vertical") * moveSpeed;
+
+            //rb.AddForce(hInput, 0, vInput);
+
+
+            
+            Vector3 moveDirection = new Vector3(CrossPlatformInputManager.GetAxis("Horizontal"), 0, CrossPlatformInputManager.GetAxis("Vertical"));
+            characterController.SimpleMove(moveDirection * moveSpeed);
+            transform.rotation = Quaternion.LookRotation(moveDirection);
+            //transform.Translate(moveDirection * Time.deltaTime, Space.World);
+
+            if (moveDirection == Vector3.zero)
+            {
+
+                anim.SetBool("IsWalking", false);
+
+            }
+            else
+            {
+
+                anim.SetBool("IsWalking", true);
+
+            }
+
+            if (CrossPlatformInputManager.GetButton("kes"))
+            {
+
+                anim.Play("doublechop");
+
+            }
+            else if (CrossPlatformInputManager.GetButton("bıc"))
+            {
+
+                anim.Play("spinattack");
+
+            }
+
+        }   
+
+    }
+
+    private void FixedUpdate() {
+
+        
+
+        if (!GameManager.instance.GameOver) {
+
+
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            Debug.DrawRay(ray.origin, ray.direction * 500, Color.green);
+
+            if (Physics.Raycast(ray, out hit, 500, layerMask, QueryTriggerInteraction.Ignore))
+            {
+
+                if (hit.point != currentLookTarget)
+                {
+
+                    currentLookTarget = hit.point;
+
+                }
+
+                Vector3 targetPosition = new Vector3(hit.point.x, transform.position.y, hit.point.z);
+                Quaternion rotation = Quaternion.LookRotation(targetPosition - transform.position);
+                transform.rotation = Quaternion.Lerp(transform.rotation, rotation, Time.deltaTime * 10f);
+
+            }
+
+        }      
+
+    }
+
+    public void BeginAttack() {
+
+        foreach (var swords in swordColliders) {
+
+            swords.enabled = true;
+
+        }
+
+        /*foreach (var capsules in capsuleColliders)
+        {
+
+            capsules.enabled = true;
+
+        }*/
+
+    }
+
+    public void EndAttack() {
+
+        foreach (var swords in swordColliders)
+        {
+
+            swords.enabled = false;
+
+        }
+
+        /*foreach (var capsules in capsuleColliders)
+        {
+
+            capsules.enabled = false;
+
+        }*/
+
+    }
+
+    public void SpeedPowerUp() {
+
+        StartCoroutine(FireTrailRoutine());
+
+    }
+
+    IEnumerator FireTrailRoutine() {
+
+        fireTrail.SetActive(true);
+        moveSpeed = 10f;
+        yield return new WaitForSeconds(10f);
+
+        moveSpeed = 5f;
+        fireTrailParticles = fireTrail.GetComponent<ParticleSystem>();
+        var em = fireTrailParticles.emission;                       
+        em.enabled = false;
+        yield return new WaitForSeconds(3f);
+
+        em.enabled = true;
+        fireTrail.SetActive(false);
+
+    }
+
+}
