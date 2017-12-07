@@ -1,0 +1,71 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class BarbarAttack : MonoBehaviour {
+
+    public static BarbarAttack instance = null;
+
+    private int heroDamage = 10;
+    private GameObject powerFlare;
+    EnemyHealth enemyHealth;
+
+    public int HeroDamage
+    {
+
+        get
+        {
+
+            return heroDamage;
+
+        }
+
+        set {
+
+            heroDamage = value;
+
+        }
+
+    }
+
+    private void Awake() {
+
+        if (instance == null)
+        {
+
+            instance = this;
+
+        }
+        else if (instance != this)
+        {
+
+            Destroy(this);
+
+        }
+    }
+
+    private void Start() {
+
+        powerFlare = GameObject.FindWithTag("flarepower") as GameObject;
+        powerFlare.SetActive(false);
+
+    }
+
+    public void DamagePowerUp() {
+
+        StartCoroutine(DamageThePowerUp());
+
+    }
+
+    IEnumerator DamageThePowerUp() {
+
+        powerFlare.SetActive(true);
+        HeroDamage = 30;
+        yield return new WaitForSeconds(10f);
+        HeroDamage = 10;
+        powerFlare.SetActive(false);
+
+    }
+    
+}
