@@ -1,0 +1,63 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BombScript : MonoBehaviour {
+
+    public static BombScript instance;
+
+    private GameObject player;
+    private SpriteRenderer spriteRenderer;
+    private GameObject explosion;
+
+    public GameObject Explosions {
+
+        get {
+
+            return explosion;
+
+        }
+
+    }
+
+    void Start() {
+
+        explosion = GameObject.FindWithTag("explosion") as GameObject;
+        explosion.SetActive(false);
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        player = GameManager.instance.Player;
+        GameManager.instance.RegisterPowerUp();
+
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+
+        if (other.gameObject == player) {
+
+            foreach (var enemy in GameManager.instance.Enemies) {
+
+                GameManager.instance.KilledEnemies.Add(enemy);
+                // GameManager.instance.KilledEnemies.Clear();
+                enemy.gameObject.SetActive(false);
+               // GameManager.instance.Enemies.Clear();
+              //  GameManager.instance.PassLevel = 0;
+
+            }
+
+            StartCoroutine(Explosion());
+
+        }
+
+    }
+
+    IEnumerator Explosion() {
+
+        spriteRenderer.enabled = false;
+        explosion.SetActive(true);
+        yield return new WaitForSeconds(3f);
+        Destroy(gameObject);
+
+    }
+
+}
