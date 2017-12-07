@@ -1,0 +1,66 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class HitCounter : MonoBehaviour {
+
+    private GameObject player;
+    private BarbarAttack barbarAttack;
+
+    [SerializeField]
+    private Text hitText;
+
+    private int hits = 0;
+
+    private float timeSinceLastHit = 0.5f;
+    private float timer = 0f;
+
+    public int Hits {
+
+        get { return hits; }
+        set { hits = value; }
+
+    }
+
+    // Use this for initialization
+    void Start () {
+
+        player = GameManager.instance.Player;
+        barbarAttack = player.GetComponent<BarbarAttack>();
+
+    }
+	
+	// Update is called once per frame
+	void Update () {
+
+        timer += Time.deltaTime;
+        hitText.text = hits.ToString();
+
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+
+        if (timer >= timeSinceLastHit && other.gameObject.tag == "enemy") {
+            
+            timer = 0f;
+
+            if (hits >= 10 && PlayerPrefs.GetInt("DamageKey") == 1)
+            {
+
+                barbarAttack.DamagePowerUp();
+                hits = 0;
+
+            }
+            else {
+
+                hits++;
+
+            }
+
+        }
+
+    }
+
+}
