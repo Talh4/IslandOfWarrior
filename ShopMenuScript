@@ -1,0 +1,91 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class ShopMenuScript : MonoBehaviour {
+    
+    [SerializeField]
+    private GameObject shopPanel;
+    [SerializeField]
+    private GameObject nuclearText;
+    [SerializeField]
+    private GameObject damageUpText;
+    [SerializeField]
+    private GameObject nuclearText2;
+    [SerializeField]
+    private GameObject damageUpText2;
+
+    private void Awake() {
+
+        
+
+    }
+
+    // Use this for initialization
+    void Start () {
+		
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+    public void OpenShop() {
+
+        shopPanel.SetActive(true);
+
+    }
+
+    public void CloseShop()
+    {
+
+        shopPanel.SetActive(false);
+
+    }
+
+    public void BuyNuclear() {
+
+
+        if (PlayerPrefs.GetInt("BombKey") != 1)
+        {
+
+            IAPManager.Instance.BuyNuclearBomb();
+            nuclearText.SetActive(true);
+            nuclearText2.SetActive(false);
+
+        }
+        else {
+
+            Debug.Log("You already bought this.");
+            nuclearText2.SetActive(true);
+            nuclearText.SetActive(false);
+
+        }
+            
+
+    }
+
+    public void BuyOneShot() {
+
+        if (PlayerPrefs.GetInt("DamageKey") != 1)
+        {
+
+            IAPManager.Instance.BuyOneShot();
+            damageUpText.SetActive(true);
+            damageUpText2.SetActive(false);
+
+        }
+        else
+        {
+
+            Debug.Log("You already bought this.");
+            damageUpText2.SetActive(true);
+            damageUpText.SetActive(false);
+
+        }
+
+    }
+
+}
